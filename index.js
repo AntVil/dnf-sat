@@ -6,7 +6,7 @@ function update(textarea) {
         let satisfiable = dnfSat(string);
         result.innerText = `satisfiable: ${satisfiable}`;
     } catch (err) {
-        result.innerText = `invalid dnf \n(${err.message})`;
+        result.innerText = err.message;
     }
 }
 
@@ -18,6 +18,10 @@ function dnfSat(string) {
     let conjunctiveConnection = false;
     let disjunctiveConnection = false;
 
+    if(string.match(/^ *$/)) {
+        throw Error("invalid dnf");
+    }
+
     for (let c of string) {
         if (c === " ") {
             continue;
@@ -25,13 +29,13 @@ function dnfSat(string) {
 
         if (c === "*") {
             if (negated) {
-                throw Error("expected variable after '-'")
+                throw Error("invalid dnf \n(expected variable after '-')")
             }
             if (conjunctiveConnection) {
-                throw Error("expected variable between '*'");
+                throw Error("invalid dnf \n(expected variable between '*')");
             }
             if (disjunctiveConnection) {
-                throw Error("expected variable between '+' and '*'");
+                throw Error("invalid dnf \n(expected variable between '+' and '*')");
             }
 
             conjunctiveConnection = true;
@@ -42,16 +46,16 @@ function dnfSat(string) {
             negated = true;
         } else if (c === "+") {
             if (negated) {
-                throw Error("expected variable after '-'");
+                throw Error("invalid dnf \n(expected variable after '-')");
             }
             if (conjunctiveConnection) {
-                throw Error("expected variable after '*'");
+                throw Error("invalid dnf \n(expected variable after '*')");
             }
             if (disjunctiveConnection) {
-                throw Error("expected term between '+'");
+                throw Error("invalid dnf \n(expected term between '+')");
             }
             if (Object.keys(termDict).length === 0) {
-                throw Error("expected term before '+'");
+                throw Error("invalid dnf \n(expected term before '+')");
             }
             if (satisfiable) {
                 // technically could return here, but need to make sure whole string is valid dnf
@@ -72,21 +76,21 @@ function dnfSat(string) {
             conjunctiveConnection = false;
             disjunctiveConnection = false;
         } else {
-            throw Error(`unexpected character '${c}'`);
+            throw Error(`invalid dnf \n(unexpected character '${c}')`);
         }
     }
 
     if (negated) {
-        throw Error("expected variable after '-'");
+        throw Error("invalid dnf \n(expected variable after '-')");
     }
     if (conjunctiveConnection) {
-        throw Error("expected variable after '*'");
+        throw Error("invalid dnf \n(expected variable after '*')");
     }
     if (disjunctiveConnection) {
-        throw Error("expected term after '+'");
+        throw Error("invalid dnf \n(expected term after '+')");
     }
     if (Object.keys(termDict).length === 0) {
-        throw Error("expected term before '+'");
+        throw Error("invalid dnf \n(expected term before '+')");
     }
 
     // any of the previous terms or the last term
